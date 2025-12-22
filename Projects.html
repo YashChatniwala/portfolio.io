@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Projects</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/boxicons@latest/css/boxicons.min.css"
+    />
+    <link rel="icon" href="Favicon2.png" type="image/png" />
+    <link rel="stylesheet" href="style.css" />
+    <style>
+      body {
+        background-color: #000;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar">
+      <a href="index.html" class="logo">Portfolio</a>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="About.html">About</a></li>
+        <li class="active"><a href="Projects.html">Projects</a></li>
+        <li><a href="contact.html">Contact</a></li>
+      </ul>
+    </nav>
+    <div class="projects">
+      <h2>Projects</h2>
+      <div class="proj_list">
+        <div class="proj_num" style="--i:1">
+          <h3>Capstone Project : Football Data Analysis</h3>
+          <p>
+            End-to-end analysis of football data involving data cleaning, exploratory data analysis, statistical testing, and machine learning. Built predictive models for player goals, market value, and match attendance (R² ≈ 0.71, accuracy ≈ 72%), and generated actionable insights on player performance, referee impact, and fan engagement using dashboards, clustering, and visual analytics.
+          </p>
+          <p><b>Below is a screenshot of the Actionable dashboard</b></p>
+          <a href="https://public.tableau.com/app/profile/yash.chatniwala/viz/Insights_17619029463490/Dashboard2?publish=yes" target="_blank">
+          <img src="D2.png" alt="Dashboard1" class="prjimg"></img></a>
+          <a href="https://public.tableau.com/app/profile/yash.chatniwala/viz/Insights_17619029463490/Dashboard1?publish=yes" target="_blank">
+            <img src="D1.png" alt="Dashboard2" class="prjimg"></img>
+          </a>
+          <a
+            href="https://github.com/YashChatniwala/Capstone-Project"
+            target="_blank" class="linkgh"
+          >
+            Link to the project
+          </a>
+        </div>
+        <div class="proj_num" style="--i:2">
+          <h3>Movie Performance And Rating Analysis</h3>
+          <p>
+            Analyzed movie industry data using data cleaning, EDA, statistics, and machine learning to understand revenue trends, audience behavior, and ratings. Developed predictive models for revenue and performance (R² ≈ 0.71, accuracy ≈ 75%) and delivered business-focused insights through visualizations, clustering, and comparative analysis to support data-driven decision-making.
+          </p>
+          <img src="D4.png" alt="Dashboard3" class="prjimg">
+          <img src="D5.png" alt="Dashboard4" class="prjimg">
+          <a
+            href="https://github.com/YashChatniwala/Movie-Data-Analysis"
+            target="_blank" class="linkgh gh2"
+          >
+            Link to the project
+          </a>
+        </div>
+      </div>
+    </div>
+    <script>
+  const navbar = document.querySelector('.navbar');
+
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) {
+      navbar.classList.add('scrolled');
+    } else {
+      navbar.classList.remove('scrolled');
+    }
+  });
+</script>
+  </body>
+</html>
