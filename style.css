@@ -309,7 +309,7 @@ a {
 }
 
 .projects .proj_list{
-  margin-left: 120px;
+  margin:auto;
   width: 90vw;
   display: flex;
   flex-direction: column;
@@ -380,4 +380,5 @@ a {
 .navbar.scrolled a {
   color: #fcfffa;
   text-shadow: 0 0 30px #7cf03d;
+
 }
