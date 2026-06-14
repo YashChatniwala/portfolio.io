@@ -77,9 +77,9 @@ const icoMat = new THREE.MeshPhysicalMaterial({
   roughness: 0.1,
   metalness: 1.0,
   transparent: true,
-  opacity: 0.6,
+  opacity: 0.45,
   emissive: 0x00e5ff,
-  emissiveIntensity: 0.8,
+  emissiveIntensity: 0.35,
 });
 const icoMesh = new THREE.Mesh(icoGeo, icoMat);
 icoMesh.position.set(3.5, 0, -2);
@@ -92,9 +92,9 @@ const icoInnerMat = new THREE.MeshPhysicalMaterial({
   roughness: 0.2,
   metalness: 1.0,
   transparent: true,
-  opacity: 0.3,
+  opacity: 0.2,
   emissive: 0x7b2fff,
-  emissiveIntensity: 0.8,
+  emissiveIntensity: 0.35,
 });
 const icoInner = new THREE.Mesh(icoInnerGeo, icoInnerMat);
 icoMesh.add(icoInner);
@@ -223,6 +223,13 @@ function animate() {
   // Add some tilt based on scroll position (absolute assignment, not +=)
   icoMesh.rotation.x = Math.sin(t * 0.4) * 0.2 + mouseY * 2.5 + extremeScroll * 0.1;
   icoMesh.rotation.z = Math.cos(t * 0.3) * 0.15;
+
+  // ── Scroll-Fade: dim icosahedron when hero text is in view ──
+  const heroFade = Math.min(scrollYRaw / 400, 1);
+  icoMesh.material.opacity = 0.45 + heroFade * 0.25;
+  icoMesh.material.emissiveIntensity = 0.35 + heroFade * 0.45;
+  icoInner.material.opacity = 0.2 + heroFade * 0.2;
+  icoInner.material.emissiveIntensity = 0.35 + heroFade * 0.45;
 
   // Moves up and scales up! (The perfect zoom)
   icoMesh.position.y = Math.sin(t * 0.5) * 0.5 + extremeScroll * 1.5;
@@ -456,3 +463,121 @@ contactForm.addEventListener('submit', function (e) {
     }, 3000);
   });
 });
+
+// ==========================================
+// 8. CUSTOM CURSOR (Magnetic)
+// ==========================================
+const cursorDot = document.getElementById('cursorDot');
+const cursorRing = document.getElementById('cursorRing');
+let cursorX = 0, cursorY = 0;
+let ringX = 0, ringY = 0;
+
+document.addEventListener('mousemove', (e) => {
+  cursorX = e.clientX;
+  cursorY = e.clientY;
+  cursorDot.style.left = cursorX + 'px';
+  cursorDot.style.top = cursorY + 'px';
+});
+
+function animateCursor() {
+  ringX += (cursorX - ringX) * 0.12;
+  ringY += (cursorY - ringY) * 0.12;
+  cursorRing.style.left = ringX + 'px';
+  cursorRing.style.top = ringY + 'px';
+  requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+// Magnetic hover on interactive elements
+const magneticEls = document.querySelectorAll('a, button, .social-icon, .skill-card, .project-card');
+magneticEls.forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    cursorDot.classList.add('hover');
+    cursorRing.classList.add('hover');
+  });
+  el.addEventListener('mouseleave', () => {
+    cursorDot.classList.remove('hover');
+    cursorRing.classList.remove('hover');
+  });
+});
+
+// ==========================================
+// 9. 3D TILT ON PROJECT CARDS
+// ==========================================
+const tiltCards = document.querySelectorAll('.project-card');
+tiltCards.forEach(card => {
+  card.addEventListener('mousemove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = ((y - centerY) / centerY) * -6;
+    const rotateY = ((x - centerX) / centerX) * 6;
+    card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-10px)`;
+  });
+  card.addEventListener('mouseleave', () => {
+    card.style.transform = '';
+  });
+});
+
+// ==========================================
+// 10. ANIMATED STAT COUNTERS
+// ==========================================
+function animateCounter(el, target, suffix) {
+  const isFloat = target % 1 !== 0;
+  const duration = 2000;
+  const start = performance.now();
+
+  function update(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = isFloat
+      ? (target * eased).toFixed(1)
+      : Math.floor(target * eased);
+    el.textContent = current + suffix;
+    if (progress < 1) requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+const statObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      const text = el.textContent;
+      const num = parseFloat(text);
+      const suffix = text.replace(/[\d.]/g, '');
+      animateCounter(el, num, suffix);
+      statObserver.unobserve(el);
+    }
+  });
+}, { threshold: 0.5 });
+
+document.querySelectorAll('.stat-num').forEach(el => statObserver.observe(el));
+
+// ==========================================
+// 11. SCROLL PROGRESS BAR
+// ==========================================
+const scrollProgressBar = document.getElementById('scrollProgress');
+function updateScrollProgress() {
+  const scrollTop = window.scrollY;
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+  scrollProgressBar.style.width = progress + '%';
+}
+window.addEventListener('scroll', updateScrollProgress, { passive: true });
+
+// ==========================================
+// 12. HERO TEXT PARALLAX
+// ==========================================
+const heroText = document.querySelector('.hero-text');
+
+function updateHeroParallax() {
+  const scrollY = window.scrollY;
+  if (scrollY > window.innerHeight) return;
+  heroText.style.transform = `translateY(${scrollY * 0.25}px)`;
+  heroText.style.opacity = 1 - scrollY / (window.innerHeight * 0.8);
+}
+window.addEventListener('scroll', updateHeroParallax, { passive: true });
