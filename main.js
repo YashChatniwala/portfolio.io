@@ -25,9 +25,10 @@ const renderer = new THREE.WebGLRenderer({
 });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.3;
+renderer.powerPreference = 'high-performance';
 
 // ── Lighting Rig ──
 const ambientLight = new THREE.AmbientLight(0x1a1a3e, 0.5);
@@ -181,10 +182,17 @@ let mouseX = 0;
 let mouseY = 0;
 let targetMouseX = 0;
 let targetMouseY = 0;
+let mouseUpdatePending = false;
 
 document.addEventListener('mousemove', (event) => {
-  targetMouseX = (event.clientX - window.innerWidth / 2) * 0.001;
-  targetMouseY = (event.clientY - window.innerHeight / 2) * 0.001;
+  if (!mouseUpdatePending) {
+    mouseUpdatePending = true;
+    requestAnimationFrame(() => {
+      targetMouseX = (event.clientX - window.innerWidth / 2) * 0.001;
+      targetMouseY = (event.clientY - window.innerHeight / 2) * 0.001;
+      mouseUpdatePending = false;
+    });
+  }
 });
 
 // ── Animation Loop ──
@@ -278,11 +286,15 @@ function animate() {
 
 animate();
 
-// Resize handler
+// Resize handler (debounced)
+let resizeTimer;
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }, 100);
 });
 
 // ==========================================
@@ -339,10 +351,6 @@ function smoothScrollTo(id) {
   const activeLink = document.querySelector(`.nav-links a[onclick*="'${id}'"]`);
   if (activeLink) activeLink.classList.add('active');
 }
-
-window.addEventListener('scroll', () => {
-  document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 20);
-});
 
 // Hamburger Menu
 function toggleMenu() {
@@ -558,26 +566,30 @@ const statObserver = new IntersectionObserver((entries) => {
 document.querySelectorAll('.stat-num').forEach(el => statObserver.observe(el));
 
 // ==========================================
-// 11. SCROLL PROGRESS BAR
+// 11. CONSOLIDATED SCROLL HANDLER
 // ==========================================
 const scrollProgressBar = document.getElementById('scrollProgress');
-function updateScrollProgress() {
-  const scrollTop = window.scrollY;
-  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-  const progress = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
-  scrollProgressBar.style.width = progress + '%';
-}
-window.addEventListener('scroll', updateScrollProgress, { passive: true });
-
-// ==========================================
-// 12. HERO TEXT PARALLAX
-// ==========================================
 const heroText = document.querySelector('.hero-text');
+const mainNav = document.getElementById('mainNav');
+let lastScrollY = -1;
 
-function updateHeroParallax() {
+function onScroll() {
   const scrollY = window.scrollY;
-  if (scrollY > window.innerHeight) return;
-  heroText.style.transform = `translateY(${scrollY * 0.25}px)`;
-  heroText.style.opacity = 1 - scrollY / (window.innerHeight * 0.8);
+  if (scrollY === lastScrollY) return;
+  lastScrollY = scrollY;
+
+  // Progress bar
+  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = docHeight > 0 ? (scrollY / docHeight) * 100 : 0;
+  scrollProgressBar.style.width = progress + '%';
+
+  // Hero parallax (only when hero is in view)
+  if (scrollY < window.innerHeight) {
+    heroText.style.transform = `translateY(${scrollY * 0.25}px)`;
+    heroText.style.opacity = 1 - scrollY / (window.innerHeight * 0.8);
+  }
+
+  // Nav shadow
+  mainNav.classList.toggle('scrolled', scrollY > 20);
 }
-window.addEventListener('scroll', updateHeroParallax, { passive: true });
+window.addEventListener('scroll', onScroll, { passive: true });

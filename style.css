@@ -40,6 +40,9 @@ html {
   scroll-behavior: smooth;
   max-width: 100%;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 body {
@@ -782,6 +785,9 @@ nav.scrolled {
 section {
   padding: clamp(4rem, 8vw, 6.5rem) clamp(1.25rem, 5vw, 3rem);
   position: relative;
+  contain: layout style;
+  content-visibility: auto;
+  contain-intrinsic-size: 0 600px;
 }
 
 /* Section gradient separator */
@@ -1564,4 +1570,42 @@ footer {
   section::before {
     width: 90%;
   }
+}
+
+/* ════════════════════════════════════════
+   REDUCED MOTION — ACCESSIBILITY
+════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .hero-text::before {
+    animation: none;
+  }
+
+  .scroll-progress {
+    transition: none;
+  }
+}
+
+/* ════════════════════════════════════════
+   GPU ACCELERATION HINTS
+════════════════════════════════════════ */
+.glow-blob,
+.scroll-progress,
+.cursor-dot,
+.cursor-ring,
+.project-card,
+.stat-card,
+.skill-card,
+.social-icon {
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
