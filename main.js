@@ -136,7 +136,7 @@ gemPositions.forEach((g, i) => {
   });
   const m = new THREE.Mesh(geo, mat);
   m.position.set(g.x, g.y, g.z);
-  m.userData = { originY: g.y, speed: g.speed, phase: Math.random() * Math.PI * 2 };
+  m.userData = { originY: g.y, originZ: g.z, speed: g.speed, phase: Math.random() * Math.PI * 2 };
   scene.add(m);
   floatingGems.push(m);
 });
@@ -227,8 +227,9 @@ function animate() {
     m.mesh.rotation.x += m.speed * 0.5;
 
     if (isMobile) {
+      // Mobile: monoliths come TOWARDS camera on scroll
       m.mesh.position.y += Math.sin(t * 0.3 + i) * 0.005;
-      m.mesh.position.z = -25 - (i * 4) + extremeScroll * (8 + i);
+      m.mesh.position.z = -25 - (i * 4) - extremeScroll * (8 + i);
     } else {
       let targetY = Math.sin(t * 0.5 + m.speed * 100) * 0.01;
       let targetZ = -25 - (i * 4) + extremeScroll * (15 + i * 2);
@@ -240,12 +241,12 @@ function animate() {
 
   // ── Icosahedron ──
   if (isMobile) {
-    // Mobile: slow rotation + scroll zoom, no mouse parallax
+    // Mobile: crystal ZOOMS OUT on scroll, gems fly through camera
     icoMesh.rotation.y += 0.005;
-    icoMesh.rotation.x = Math.sin(t * 0.2) * 0.1 + extremeScroll * 0.1;
-    icoMesh.position.y = Math.sin(t * 0.3) * 0.3 + extremeScroll * 1.5;
-    icoMesh.position.z = -4.5 + extremeScroll * 5.5;
-    icoMesh.scale.setScalar(0.65 + extremeScroll * 0.5);
+    icoMesh.rotation.x = Math.sin(t * 0.2) * 0.1 - extremeScroll * 0.05;
+    icoMesh.position.y = Math.sin(t * 0.3) * 0.3 - extremeScroll * 0.8;
+    icoMesh.position.z = -4.5 - extremeScroll * 2;
+    icoMesh.scale.setScalar(Math.max(0.65 - extremeScroll * 0.15, 0.3));
 
     icoInner.rotation.y -= 0.007;
     icoInner.rotation.x += 0.005;
@@ -270,7 +271,16 @@ function animate() {
   }
 
   // ── Floating Gems ──
-  if (!isMobile) {
+  if (isMobile) {
+    // Mobile: gems fly TOWARDS camera on scroll (reversed)
+    floatingGems.forEach(gem => {
+      const d = gem.userData;
+      gem.position.y = d.originY + Math.sin(t * d.speed + d.phase) * 0.4 - extremeScroll * d.speed * 6;
+      gem.position.z = d.originZ - extremeScroll * 3;
+      gem.rotation.x = t * d.speed * 0.3;
+      gem.rotation.y = t * d.speed * 0.25;
+    });
+  } else {
     floatingGems.forEach(gem => {
       const d = gem.userData;
       gem.position.y = d.originY + Math.sin(t * d.speed + d.phase) * 0.6 + extremeScroll * d.speed * 8;
@@ -281,11 +291,12 @@ function animate() {
 
   // ── Particles ──
   if (isMobile) {
+    // Mobile: particles drift towards camera on scroll (reversed)
     dustMesh.rotation.y = t * 0.01;
     dustMesh.rotation.x = t * 0.005;
     orbMesh.rotation.y = t * -0.008;
     orbMesh.rotation.x = t * 0.004;
-    orbMesh.position.z = extremeScroll * 3;
+    orbMesh.position.z = -extremeScroll * 3;
   } else {
     dustMesh.rotation.y = t * 0.02 - mouseX * 0.4 + extremeScroll * 0.5;
     dustMesh.rotation.x = t * 0.01 - mouseY * 0.3 + extremeScroll * 0.5;

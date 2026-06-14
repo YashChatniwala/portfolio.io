@@ -1641,10 +1641,3 @@ footer {
     display: none;
   }
 }
-
-/* Simpler cursor on small screens (if visible) */
-.cursor-dot,
-.cursor-ring {
-  display: none;
-}
-}
