@@ -31,7 +31,7 @@ const renderer = new THREE.WebGLRenderer({
 });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 1.5));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 1.5));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.3;
 renderer.powerPreference = 'high-performance';
@@ -48,9 +48,11 @@ const accentLight = new THREE.PointLight(0x7b2fff, 2.5, 30);
 accentLight.position.set(-5, -2, 4);
 scene.add(accentLight);
 
-const rimLight = new THREE.PointLight(0x00ffaa, 1.5, 20);
-rimLight.position.set(0, 8, -4);
-scene.add(rimLight);
+if (!isMobile) {
+  const rimLight = new THREE.PointLight(0x00ffaa, 1.5, 20);
+  rimLight.position.set(0, 8, -4);
+  scene.add(rimLight);
+}
 
 
 
@@ -219,77 +221,105 @@ function animate() {
 
 
 
-  // ── Deep Background Monoliths Zoom Towards Camera ──
+  // ── Deep Background Monoliths ──
   monoliths.forEach((m, i) => {
     m.mesh.rotation.y += m.speed;
     m.mesh.rotation.x += m.speed * 0.5;
 
-    let targetY = Math.sin(t * 0.5 + m.speed * 100) * 0.01;
-    // Monoliths fly forward past the camera on scroll!
-    let targetZ = -25 - (i * 4) + extremeScroll * (15 + i * 2);
-    // Wrap around for infinite effect
-    if (targetZ > 10) targetZ = -40 + (targetZ % 50);
-
-    m.mesh.position.y += targetY;
-    m.mesh.position.z = targetZ;
+    if (isMobile) {
+      m.mesh.position.y += Math.sin(t * 0.3 + i) * 0.005;
+      m.mesh.position.z = -25 - (i * 4) + extremeScroll * (8 + i);
+    } else {
+      let targetY = Math.sin(t * 0.5 + m.speed * 100) * 0.01;
+      let targetZ = -25 - (i * 4) + extremeScroll * (15 + i * 2);
+      if (targetZ > 10) targetZ = -40 + (targetZ % 50);
+      m.mesh.position.y += targetY;
+      m.mesh.position.z = targetZ;
+    }
   });
 
-  // ── Icosahedron (Constant spin speed, but zooms perfectly!) ──
-  icoMesh.rotation.y += 0.01; // Constant rotation! Fixed the crazy spin bug.
-  // Add some tilt based on scroll position (absolute assignment, not +=)
-  icoMesh.rotation.x = Math.sin(t * 0.4) * 0.2 + mouseY * 2.5 + extremeScroll * 0.1;
-  icoMesh.rotation.z = Math.cos(t * 0.3) * 0.15;
+  // ── Icosahedron ──
+  if (isMobile) {
+    // Mobile: slow rotation + scroll zoom, no mouse parallax
+    icoMesh.rotation.y += 0.005;
+    icoMesh.rotation.x = Math.sin(t * 0.2) * 0.1 + extremeScroll * 0.1;
+    icoMesh.position.y = Math.sin(t * 0.3) * 0.3 + extremeScroll * 1.5;
+    icoMesh.position.z = -4.5 + extremeScroll * 5.5;
+    icoMesh.scale.setScalar(0.65 + extremeScroll * 0.5);
 
-  // ── Scroll-Fade: dim icosahedron when hero text is in view ──
-  const heroFade = Math.min(scrollYRaw / 400, 1);
-  icoMesh.material.opacity = 0.45 + heroFade * 0.25;
-  icoMesh.material.emissiveIntensity = 0.35 + heroFade * 0.45;
-  icoInner.material.opacity = 0.2 + heroFade * 0.2;
-  icoInner.material.emissiveIntensity = 0.35 + heroFade * 0.45;
+    icoInner.rotation.y -= 0.007;
+    icoInner.rotation.x += 0.005;
+  } else {
+    // Desktop: full interaction
+    icoMesh.rotation.y += 0.01;
+    icoMesh.rotation.x = Math.sin(t * 0.4) * 0.2 + mouseY * 2.5 + extremeScroll * 0.1;
+    icoMesh.rotation.z = Math.cos(t * 0.3) * 0.15;
 
-  // Moves up and scales up! (The perfect zoom)
-  icoMesh.position.y = Math.sin(t * 0.5) * 0.5 + extremeScroll * 1.5;
-  icoMesh.position.z = -4.5 + extremeScroll * 5.5;
-  icoMesh.scale.setScalar(0.7 + extremeScroll * 0.5);
+    const heroFade = Math.min(scrollYRaw / 400, 1);
+    icoMesh.material.opacity = 0.45 + heroFade * 0.25;
+    icoMesh.material.emissiveIntensity = 0.35 + heroFade * 0.45;
+    icoInner.material.opacity = 0.2 + heroFade * 0.2;
+    icoInner.material.emissiveIntensity = 0.35 + heroFade * 0.45;
 
-  icoInner.rotation.y -= 0.015; // Constant rotation!
-  icoInner.rotation.x += 0.01; // Constant rotation!
+    icoMesh.position.y = Math.sin(t * 0.5) * 0.5 + extremeScroll * 1.5;
+    icoMesh.position.z = -4.5 + extremeScroll * 5.5;
+    icoMesh.scale.setScalar(0.7 + extremeScroll * 0.5);
 
-
+    icoInner.rotation.y -= 0.015;
+    icoInner.rotation.x += 0.01;
+  }
 
   // ── Floating Gems ──
-  floatingGems.forEach(gem => {
-    const d = gem.userData;
-    // Fly upwards out of view
-    gem.position.y = d.originY + Math.sin(t * d.speed + d.phase) * 0.6 + extremeScroll * d.speed * 8;
-    // Absolute rotation shift based on scroll (safe)
-    gem.rotation.x = t * d.speed * 0.5 + extremeScroll * 2;
-    gem.rotation.y = t * d.speed * 0.4 + extremeScroll * 2;
-  });
-
-  // ── Particles (Warp speed effect) ──
-  dustMesh.rotation.y = t * 0.02 - mouseX * 0.4 + extremeScroll * 0.5;
-  dustMesh.rotation.x = t * 0.01 - mouseY * 0.3 + extremeScroll * 0.5;
-
-  orbMesh.rotation.y = t * -0.015 + mouseX * 0.2 - extremeScroll * 0.3;
-  orbMesh.rotation.x = t * 0.008 + mouseY * 0.15 - extremeScroll * 0.3;
-  // Push orbs slightly forward
-  orbMesh.position.z = extremeScroll * 5;
-
-  // ── Animated Lights (desktop only) ──
   if (!isMobile) {
+    floatingGems.forEach(gem => {
+      const d = gem.userData;
+      gem.position.y = d.originY + Math.sin(t * d.speed + d.phase) * 0.6 + extremeScroll * d.speed * 8;
+      gem.rotation.x = t * d.speed * 0.5 + extremeScroll * 2;
+      gem.rotation.y = t * d.speed * 0.4 + extremeScroll * 2;
+    });
+  }
+
+  // ── Particles ──
+  if (isMobile) {
+    dustMesh.rotation.y = t * 0.01;
+    dustMesh.rotation.x = t * 0.005;
+    orbMesh.rotation.y = t * -0.008;
+    orbMesh.rotation.x = t * 0.004;
+    orbMesh.position.z = extremeScroll * 3;
+  } else {
+    dustMesh.rotation.y = t * 0.02 - mouseX * 0.4 + extremeScroll * 0.5;
+    dustMesh.rotation.x = t * 0.01 - mouseY * 0.3 + extremeScroll * 0.5;
+    orbMesh.rotation.y = t * -0.015 + mouseX * 0.2 - extremeScroll * 0.3;
+    orbMesh.rotation.x = t * 0.008 + mouseY * 0.15 - extremeScroll * 0.3;
+    orbMesh.position.z = extremeScroll * 5;
+  }
+
+  // ── Animated Lights ──
+  if (isMobile) {
+    mainLight.position.x = 4 + Math.sin(t * 0.2) * 1.5;
+    mainLight.position.y = 5 + Math.cos(t * 0.25) * 1;
+    accentLight.position.x = -5 + Math.sin(t * 0.3) * 2;
+    accentLight.position.y = -2 + Math.cos(t * 0.2) * 1.5;
+  } else {
     mainLight.position.x = 4 + Math.sin(t * 0.4) * 2.5;
     mainLight.position.y = 5 + Math.cos(t * 0.5) * 2;
     accentLight.position.x = -5 + Math.sin(t * 0.6) * 3.5;
     accentLight.position.y = -2 + Math.cos(t * 0.4) * 2.5;
   }
 
-  // ── Camera Extreme Parallax ──
-  camera.position.x = mouseX * 2.5;
-  camera.position.y = -mouseY * 2.0;
-  // Base Z is 7, we zoom OUT slightly so the engulfing effect feels huge
-  camera.position.z = 7 + extremeScroll * 1.5;
-  camera.lookAt(0, extremeScroll * 1.5, -3);
+  // ── Camera ──
+  if (isMobile) {
+    // Mobile: static camera, no parallax
+    camera.position.x = 0;
+    camera.position.y = 0;
+    camera.position.z = 8;
+    camera.lookAt(0, 0, -3);
+  } else {
+    camera.position.x = mouseX * 2.5;
+    camera.position.y = -mouseY * 2.0;
+    camera.position.z = 7 + extremeScroll * 1.5;
+    camera.lookAt(0, extremeScroll * 1.5, -3);
+  }
 
   renderer.render(scene, camera);
 }

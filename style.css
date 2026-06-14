@@ -1615,21 +1615,7 @@ footer {
 ════════════════════════════════════════ */
 @media (max-width: 768px) {
 
-  /* Disable expensive backdrop-filter blur */
-  nav,
-  .project-card,
-  .contact-link,
-  .loader-panel {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-
-  /* Reduce glow blob size and disable filter blur */
-  .glow-blob {
-    filter: blur(40px);
-    opacity: 0.15;
-  }
-
+  /* Reduce glow blob size */
   .glow-blob-1 {
     width: 300px;
     height: 300px;
@@ -1640,22 +1626,7 @@ footer {
     height: 250px;
   }
 
-  /* Disable hero text spotlight pulse */
-  .hero-text::before {
-    animation: none;
-  }
-
-  /* Simplify card borders */
-  .project-card::before {
-    animation: none;
-  }
-
-  .stat-card::before,
-  .skill-card::before {
-    background: linear-gradient(135deg, rgba(0, 229, 255, 0.08), transparent);
-  }
-
-  /* Reduce gradient animation complexity */
+  /* Slow down gradient animations */
   .hero-name span {
     animation-duration: 12s;
   }
@@ -1664,14 +1635,16 @@ footer {
     animation-duration: 12s;
   }
 
-  /* Remove scroll hint bounce */
-  .scroll-arrow {
-    animation: none;
-  }
-
-  /* Simpler cursor on small screens (if visible) */
+  /* Hide custom cursor on touch */
   .cursor-dot,
   .cursor-ring {
     display: none;
   }
+}
+
+/* Simpler cursor on small screens (if visible) */
+.cursor-dot,
+.cursor-ring {
+  display: none;
+}
 }
