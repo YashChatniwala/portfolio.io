@@ -1,6 +1,12 @@
 import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
 // ==========================================
+// MOBILE DETECTION
+// ==========================================
+const isMobile = /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+  || window.innerWidth < 768;
+
+// ==========================================
 // 1. GLASS LOADER DISMISSAL
 // ==========================================
 window.addEventListener('load', () => {
@@ -25,7 +31,7 @@ const renderer = new THREE.WebGLRenderer({
 });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 1.5));
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.3;
 renderer.powerPreference = 'high-performance';
@@ -50,7 +56,8 @@ scene.add(rimLight);
 
 // ── Deep Background Monoliths ──
 const monoliths = [];
-for (let i = 0; i < 6; i++) {
+const monolithCount = isMobile ? 2 : 6;
+for (let i = 0; i < monolithCount; i++) {
   const mGeo = new THREE.BoxGeometry(1.5, 8, 1.5);
   const mMat = new THREE.MeshPhysicalMaterial({
     color: 0x00e5ff,
@@ -71,7 +78,7 @@ for (let i = 0; i < 6; i++) {
 }
 
 // ── Hero Icosahedron (main centerpiece) ──
-const icoGeo = new THREE.IcosahedronGeometry(2.4, 1);
+const icoGeo = new THREE.IcosahedronGeometry(2.4, isMobile ? 0 : 1);
 const icoMat = new THREE.MeshPhysicalMaterial({
   color: 0x00e5ff,
   wireframe: true,
@@ -87,7 +94,7 @@ icoMesh.position.set(3.5, 0, -2);
 scene.add(icoMesh);
 
 // Inner solid icosahedron for depth
-const icoInnerGeo = new THREE.IcosahedronGeometry(1.7, 2);
+const icoInnerGeo = new THREE.IcosahedronGeometry(1.7, isMobile ? 0 : 2);
 const icoInnerMat = new THREE.MeshPhysicalMaterial({
   color: 0xa855f7,
   roughness: 0.2,
@@ -104,7 +111,7 @@ icoMesh.add(icoInner);
 
 // ── Floating Cubes (scattered gems) ──
 const floatingGems = [];
-const gemPositions = [
+const allGemPositions = [
   { x: -6, y: 3, z: -15, s: 0.5, speed: 0.8 },
   { x: 5, y: -3, z: -16, s: 0.4, speed: 1.1 },
   { x: -4, y: -4, z: -13, s: 0.3, speed: 1.3 },
@@ -112,6 +119,7 @@ const gemPositions = [
   { x: -8, y: -1, z: -18, s: 0.55, speed: 0.9 },
   { x: 2, y: 5, z: -14, s: 0.35, speed: 1.2 },
 ];
+const gemPositions = isMobile ? allGemPositions.slice(0, 2) : allGemPositions;
 gemPositions.forEach((g, i) => {
   const geo = new THREE.BoxGeometry(g.s, g.s, g.s);
   const mat = new THREE.MeshPhysicalMaterial({
@@ -132,7 +140,7 @@ gemPositions.forEach((g, i) => {
 });
 
 // ── Star Dust Particles ──
-const dustCount = 1500;
+const dustCount = isMobile ? 400 : 1500;
 const dustGeo = new THREE.BufferGeometry();
 const dustPos = new Float32Array(dustCount * 3);
 for (let i = 0; i < dustCount * 3; i++) {
@@ -150,7 +158,7 @@ const dustMesh = new THREE.Points(dustGeo, dustMat);
 scene.add(dustMesh);
 
 // ── Nebula Orbs ──
-const orbCount = 100;
+const orbCount = isMobile ? 30 : 100;
 const orbGeo = new THREE.BufferGeometry();
 const orbPos = new Float32Array(orbCount * 3);
 const orbColors = new Float32Array(orbCount * 3);
@@ -268,11 +276,13 @@ function animate() {
   // Push orbs slightly forward
   orbMesh.position.z = extremeScroll * 5;
 
-  // ── Animated Lights ──
-  mainLight.position.x = 4 + Math.sin(t * 0.4) * 2.5;
-  mainLight.position.y = 5 + Math.cos(t * 0.5) * 2;
-  accentLight.position.x = -5 + Math.sin(t * 0.6) * 3.5;
-  accentLight.position.y = -2 + Math.cos(t * 0.4) * 2.5;
+  // ── Animated Lights (desktop only) ──
+  if (!isMobile) {
+    mainLight.position.x = 4 + Math.sin(t * 0.4) * 2.5;
+    mainLight.position.y = 5 + Math.cos(t * 0.5) * 2;
+    accentLight.position.x = -5 + Math.sin(t * 0.6) * 3.5;
+    accentLight.position.y = -2 + Math.cos(t * 0.4) * 2.5;
+  }
 
   // ── Camera Extreme Parallax ──
   camera.position.x = mouseX * 2.5;
