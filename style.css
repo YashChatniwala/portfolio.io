@@ -122,13 +122,26 @@ body::before {
 
 /* Hide default cursor on desktop */
 @media (hover: hover) {
-  body { cursor: none; }
-  a, button, .social-icon, .skill-card, .project-card { cursor: none; }
+  body {
+    cursor: none;
+  }
+
+  a,
+  button,
+  .social-icon,
+  .skill-card,
+  .project-card {
+    cursor: none;
+  }
 }
 
 /* Hide custom cursor on touch devices */
 @media (hover: none) {
-  .cursor-dot, .cursor-ring { display: none; }
+
+  .cursor-dot,
+  .cursor-ring {
+    display: none;
+  }
 }
 
 /* ════════════════════════════════════════
@@ -497,8 +510,17 @@ nav.scrolled {
 }
 
 @keyframes spotlightPulse {
-  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
 }
 
 .eyebrow {
