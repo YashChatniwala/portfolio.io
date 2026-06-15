@@ -27,7 +27,7 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 const renderer = new THREE.WebGLRenderer({
   canvas: document.querySelector('#bg-canvas'),
   alpha: true,
-  antialias: true
+  antialias: !isMobile  // Disabled on mobile — MSAA is a major GPU killer on phones
 });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -61,7 +61,18 @@ const monoliths = [];
 const monolithCount = isMobile ? 2 : 6;
 for (let i = 0; i < monolithCount; i++) {
   const mGeo = new THREE.BoxGeometry(1.5, 8, 1.5);
-  const mMat = new THREE.MeshPhysicalMaterial({
+  const mMat = isMobile
+    ? new THREE.MeshStandardMaterial({
+        color: 0x00e5ff,
+        wireframe: true,
+        roughness: 0.2,
+        metalness: 1.0,
+        transparent: true,
+        opacity: 0.35,
+        emissive: 0x0088aa,
+        emissiveIntensity: 0.6
+      })
+    : new THREE.MeshPhysicalMaterial({
     color: 0x00e5ff,
     wireframe: true,
     roughness: 0.2,
@@ -81,7 +92,18 @@ for (let i = 0; i < monolithCount; i++) {
 
 // ── Hero Icosahedron (main centerpiece) ──
 const icoGeo = new THREE.IcosahedronGeometry(2.4, isMobile ? 0 : 1);
-const icoMat = new THREE.MeshPhysicalMaterial({
+const icoMat = isMobile
+  ? new THREE.MeshStandardMaterial({
+      color: 0x00e5ff,
+      wireframe: true,
+      roughness: 0.1,
+      metalness: 1.0,
+      transparent: true,
+      opacity: 0.45,
+      emissive: 0x00e5ff,
+      emissiveIntensity: 0.35,
+    })
+  : new THREE.MeshPhysicalMaterial({
   color: 0x00e5ff,
   wireframe: true,
   roughness: 0.1,
@@ -97,7 +119,17 @@ scene.add(icoMesh);
 
 // Inner solid icosahedron for depth
 const icoInnerGeo = new THREE.IcosahedronGeometry(1.7, isMobile ? 0 : 2);
-const icoInnerMat = new THREE.MeshPhysicalMaterial({
+const icoInnerMat = isMobile
+  ? new THREE.MeshStandardMaterial({
+      color: 0xa855f7,
+      roughness: 0.2,
+      metalness: 1.0,
+      transparent: true,
+      opacity: 0.2,
+      emissive: 0x7b2fff,
+      emissiveIntensity: 0.35,
+    })
+  : new THREE.MeshPhysicalMaterial({
   color: 0xa855f7,
   roughness: 0.2,
   metalness: 1.0,
@@ -124,7 +156,18 @@ const allGemPositions = [
 const gemPositions = isMobile ? allGemPositions.slice(0, 2) : allGemPositions;
 gemPositions.forEach((g, i) => {
   const geo = new THREE.BoxGeometry(g.s, g.s, g.s);
-  const mat = new THREE.MeshPhysicalMaterial({
+  const mat = isMobile
+    ? new THREE.MeshStandardMaterial({
+        color: i % 2 === 0 ? 0x00e5ff : 0xa855f7,
+        wireframe: i % 3 === 0,
+        roughness: 0.1,
+        metalness: 1.0,
+        transparent: true,
+        opacity: 0.4 + Math.random() * 0.2,
+        emissive: i % 2 === 0 ? 0x006688 : 0x5a18c4,
+        emissiveIntensity: 0.7,
+      })
+    : new THREE.MeshPhysicalMaterial({
     color: i % 2 === 0 ? 0x00e5ff : 0xa855f7,
     wireframe: i % 3 === 0,
     roughness: 0.1,
@@ -187,6 +230,10 @@ scene.add(orbMesh);
 
 camera.position.z = 7;
 
+// ── Cached Scroll Position (avoids forced reflow in animation loop) ──
+let cachedScrollY = 0;
+window.addEventListener('scroll', () => { cachedScrollY = window.scrollY; }, { passive: true });
+
 // ── Mouse Interaction ──
 let mouseX = 0;
 let mouseY = 0;
@@ -211,7 +258,7 @@ const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   const t = clock.getElapsedTime();
-  const scrollYRaw = window.scrollY;
+  const scrollYRaw = cachedScrollY; // Use cached value — no forced reflow!
   const scrollY = scrollYRaw * 0.001;
   const extremeScroll = scrollYRaw * 0.005; // Restored the perfect extreme zoom!
 
@@ -630,7 +677,7 @@ function onScroll() {
 
   // Hero parallax (only when hero is in view)
   if (scrollY < window.innerHeight) {
-    heroText.style.transform = `translateY(${scrollY * 0.25}px)`;
+    heroText.style.transform = `translate3d(0, ${scrollY * 0.25}px, 0)`; // translate3d forces GPU layer
     heroText.style.opacity = 1 - scrollY / (window.innerHeight * 0.8);
   }
 

@@ -171,6 +171,7 @@ body::before {
   height: 100%;
   z-index: -1;
   pointer-events: none;
+  will-change: transform; /* Promote canvas to its own GPU layer */
 }
 
 /* ════════════════════════════════════════
