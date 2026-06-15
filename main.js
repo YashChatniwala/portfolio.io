@@ -677,8 +677,12 @@ function onScroll() {
 
   // Hero parallax (only when hero is in view)
   if (scrollY < window.innerHeight) {
-    heroText.style.transform = `translate3d(0, ${scrollY * 0.25}px, 0)`; // translate3d forces GPU layer
-    heroText.style.opacity = 1 - scrollY / (window.innerHeight * 0.8);
+    if (isMobile) {
+      // On mobile: skip transform + opacity changes during scroll for max smoothness
+    } else {
+      heroText.style.transform = `translate3d(0, ${scrollY * 0.25}px, 0)`;
+      heroText.style.opacity = 1 - scrollY / (window.innerHeight * 0.8);
+    }
   }
 
   // Nav shadow
